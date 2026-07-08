@@ -20,6 +20,8 @@ from src.lane_change_test_system.core import (
 
 ROOT = Path(__file__).resolve().parent
 STATIC_ROOT = ROOT / "static"
+LOGIN_USER = "admin"
+LOGIN_PASSWORD = "123456"
 
 
 class LaneChangeHandler(BaseHTTPRequestHandler):
@@ -47,6 +49,9 @@ class LaneChangeHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path == "/api/login":
+            self._handle_login()
+            return
         if parsed.path != "/api/run":
             self.send_error(404, "Not found")
             return
@@ -60,6 +65,22 @@ class LaneChangeHandler(BaseHTTPRequestHandler):
             self._send_json(result.to_dict())
         except Exception as exc:  # The UI displays the exact validation message.
             self._send_json({"error": str(exc)}, status=400)
+
+    def _handle_login(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            raw = self.rfile.read(length).decode("utf-8")
+            payload = json.loads(raw)
+        except Exception:
+            self._send_json({"ok": False, "error": "登录请求格式错误"}, status=400)
+            return
+
+        username = str(payload.get("username", ""))
+        password = str(payload.get("password", ""))
+        if username == LOGIN_USER and password == LOGIN_PASSWORD:
+            self._send_json({"ok": True})
+            return
+        self._send_json({"ok": False, "error": "用户名或密码错误"}, status=401)
 
     def log_message(self, fmt: str, *args: object) -> None:
         print("%s - %s" % (self.address_string(), fmt % args))
@@ -105,4 +126,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

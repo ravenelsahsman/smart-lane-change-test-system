@@ -81,6 +81,15 @@
       font-size: 19px;
     }
 
+    .login-error {
+      min-height: 20px;
+      color: var(--danger);
+      font-size: 13px;
+      margin: -4px 0 12px;
+      text-align: center;
+      font-weight: 700;
+    }
+
     label {
       display: block;
       font-weight: 600;
@@ -397,12 +406,85 @@
       gap: 10px;
     }
 
+    .intro-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .intro-block {
+      border: 1px solid #e1eaf2;
+      border-radius: 5px;
+      padding: 16px;
+      background: #fbfdff;
+    }
+
+    .intro-block h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .intro-block p {
+      margin: 0;
+      line-height: 1.72;
+      color: #4c5d6d;
+      font-size: 14px;
+    }
+
+    .module-flow {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 20px;
+    }
+
+    .module-flow div {
+      border-left: 4px solid var(--accent);
+      background: #f7fafc;
+      padding: 12px 13px;
+      line-height: 1.5;
+      min-height: 78px;
+    }
+
+    .module-flow strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .module-flow span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
     .formula {
       background: #f7fafc;
       border-left: 4px solid #83bfdf;
       padding: 12px 14px;
       font-family: Consolas, "Microsoft YaHei", monospace;
       overflow-wrap: anywhere;
+    }
+
+    .motion-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .motion-canvas {
+      height: 430px;
+      background: #f9fcff;
+    }
+
+    .motion-side {
+      display: grid;
+      gap: 12px;
+    }
+
+    .motion-side .metric {
+      min-height: 82px;
     }
 
     .modal-backdrop {
@@ -468,7 +550,10 @@
       .grid,
       .grid.two,
       .metric-row,
-      .chart-grid {
+      .chart-grid,
+      .intro-grid,
+      .module-flow,
+      .motion-layout {
         grid-template-columns: 1fr;
       }
 
@@ -495,6 +580,7 @@
           <label for="password">密码</label>
           <input id="password" type="password" value="123456" autocomplete="current-password" />
         </div>
+        <div class="login-error" id="loginError"></div>
         <button class="primary-btn" style="width:100%" id="loginBtn">进入系统</button>
       </div>
     </div>
@@ -512,7 +598,8 @@
         <button data-page="process"><span class="mark">2</span>数据处理</button>
         <button data-page="reconstruct"><span class="mark">3</span>阈值重构</button>
         <button data-page="control"><span class="mark">4</span>控制指令</button>
-        <button data-page="feedback"><span class="mark">5</span>反馈优化</button>
+        <button data-page="motion"><span class="mark">5</span>运动演示</button>
+        <button data-page="feedback"><span class="mark">6</span>反馈优化</button>
         <button data-page="report"><span class="mark">R</span>测试报告</button>
       </nav>
     </aside>
@@ -521,9 +608,38 @@
       <section class="page active" id="page-intro">
         <div class="panel">
           <h2 class="page-title">系统介绍</h2>
+          <div class="intro-grid">
+            <div class="intro-block">
+              <h3>项目来源</h3>
+              <p>本测试系统严格围绕项目书“基于深度学习的智能车辆变道轨迹自动生成方法及系统”构建，用于验证深度学习轨迹输出之后的曲率提取、曲率极性反转点识别、底盘物理阈值计算、局部曲率重构、控制指令生成和反馈优化闭环。</p>
+            </div>
+            <div class="intro-block">
+              <h3>核心问题</h3>
+              <p>连续 S 型变道时，轨迹曲率由左转切换为右转或由右转切换为左转，曲率反转点附近的曲率空间变化率过大，会使后轴动态载荷转移超过悬架阻尼极限，从而诱发后轮微观侧滑和横摆振荡。</p>
+            </div>
+            <div class="intro-block">
+              <h3>测试对象</h3>
+              <p>系统不擅自构造计划书未给出的神经网络结构，而是接收“预设轨迹生成网络输出”的预选变道轨迹点集 T_raw，并对该点集执行计划书中明确给出的三点差分、离散微分、阈值限幅、积分重构和控制映射。</p>
+            </div>
+            <div class="intro-block">
+              <h3>验证目标</h3>
+              <p>通过控制前轨迹与控制后目标轨迹的曲线、曲率、变化率、PWM 指令、反馈参数和动态小车运动演示，观察局部刚性限幅后轨迹反转是否更平缓，以及目标控制指令是否具备更高的执行稳定性。</p>
+            </div>
+          </div>
+          <div class="module-flow">
+            <div><strong>提取模块</strong><span>从 T_raw 中提取几何曲率序列 K_raw 与曲率空间变化率序列 ΔK。</span></div>
+            <div><strong>峰值提取模块</strong><span>按 κ_i*κ_{i+1}&lt;0 锚定曲率反转点，并在预设空间范围内提取 γ_raw。</span></div>
+            <div><strong>阈值获得模块</strong><span>利用车速 v 与底盘载荷刚性分配参数计算 γ_max。</span></div>
+            <div><strong>重构模块</strong><span>当 |γ_raw| 超过 γ_max 时，对局部曲率空间变化率钳位并执行位置迭代重构。</span></div>
+            <div><strong>控制指令模块</strong><span>将目标控制曲率映射为前轮转向角 δ 和 PWM 占空比。</span></div>
+            <div><strong>反馈优化模块</strong><span>通过 F_opt 判断执行置信度，并按公式更新后续预设空间范围。</span></div>
+          </div>
           <div class="formula-list">
             <div class="formula">T_raw={(x_1,y_1),(x_2,y_2),...,(x_N,y_N)}</div>
+            <div class="formula">κ_i=(x_i' y_i'' - y_i' x_i'') / (x_i'^2 + y_i'^2)^(3/2)</div>
+            <div class="formula">κ_i'=(κ_{i+1}-κ_i)/Δs_i，曲率极性反转条件：κ_i * κ_{i+1} &lt; 0</div>
             <div class="formula">γ_max=(K_damp*t_w)/(m*h_g*D_r*v^3)</div>
+            <div class="formula">κ_safe(s)=κ_safe(0)+∫_0^s κ_rate(l)dl，θ(s)=θ_0+∫_0^s κ_safe(l)dl</div>
             <div class="formula">δ=arctan(L*κ)，Duty=K_pwm*δ+Duty_center</div>
             <div class="formula">F_opt=exp(-λ1*e_y^2-λ2*e_ω^2)，L_new=min(L_max,L_old+ρ*(F_th-F_opt))</div>
           </div>
@@ -625,6 +741,30 @@
         </div>
       </section>
 
+      <section class="page" id="page-motion">
+        <div class="panel">
+          <h2 class="page-title">控制前后小车运动演示</h2>
+          <div class="motion-layout">
+            <div class="chart-box">
+              <h3>控制前轨迹 T_raw 与控制后目标轨迹 T_target</h3>
+              <canvas class="motion-canvas" id="motionCanvas"></canvas>
+              <div class="actions">
+                <button class="primary-btn" id="motionPlayBtn">播放</button>
+                <button class="ghost-btn" id="motionPauseBtn">暂停</button>
+                <button class="ghost-btn" id="motionResetBtn">复位</button>
+                <span class="status" id="motionStatus"></span>
+              </div>
+            </div>
+            <div class="motion-side">
+              <div class="metric"><label>控制前轨迹长度</label><strong id="metricRawLength">-</strong></div>
+              <div class="metric"><label>控制后轨迹长度</label><strong id="metricTargetLength">-</strong></div>
+              <div class="metric"><label>动画进度</label><strong id="metricMotionProgress">-</strong></div>
+              <div class="metric"><label>重构窗口数量</label><strong id="metricMotionRebuilt">-</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="page" id="page-feedback">
         <div class="panel">
           <h2 class="page-title">反馈优化</h2>
@@ -681,9 +821,33 @@
       "maxSpatialRange", "lateralError", "yawRateError"
     ];
     let lastResult = null;
+    const motionState = {
+      running: false,
+      progress: 0,
+      rafId: 0,
+      lastTime: 0
+    };
 
     const byId = (id) => document.getElementById(id);
     const fmt = (value, digits = 6) => Number.isFinite(value) ? Number(value).toFixed(digits) : "-";
+
+    async function login() {
+      byId("loginError").textContent = "";
+      const username = byId("username").value.trim();
+      const password = byId("password").value;
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        byId("loginError").textContent = data.error || "用户名或密码错误";
+        byId("password").focus();
+        return;
+      }
+      showApp();
+    }
 
     function showApp() {
       byId("loginScreen").style.display = "none";
@@ -698,6 +862,8 @@
       document.querySelector(`.nav button[data-page="${page}"]`).classList.add("active");
       if (lastResult) {
         window.setTimeout(() => drawAllCharts(lastResult), 30);
+      } else if (page === "motion") {
+        window.setTimeout(() => drawMotionPlaceholder(), 30);
       }
     }
 
@@ -760,6 +926,10 @@
       byId("metricLold").textContent = fmt(feedback.oldSpatialRange, 3);
       byId("metricLnew").textContent = fmt(feedback.newSpatialRange, 3);
       byId("metricUpdated").textContent = feedback.updated ? "更新" : "保持";
+      byId("metricRawLength").textContent = fmt(pathLength(result.rawPoints), 3) + " m";
+      byId("metricTargetLength").textContent = fmt(pathLength(result.targetPoints), 3) + " m";
+      byId("metricMotionProgress").textContent = "0%";
+      byId("metricMotionRebuilt").textContent = rebuilt;
 
       byId("controlTable").innerHTML = [
         ["目标前轮转向角", "δ=arctan(L*κ)", `${fmt(cmd.steeringAngleRad)} rad`],
@@ -815,6 +985,7 @@
         { name: "Delta K target", values: result.targetCurvatureRate, color: "#1f9d67" }
       ], { positive: result.gammaMax, negative: -result.gammaMax });
       drawXYChart(byId("lookupChart"), result.thresholdLookup.map(p => ({ x: p.speed, y: p.gammaMax })), "#2c97d3");
+      drawMotionFrame(result, motionState.progress);
     }
 
     function setupCanvas(canvas) {
@@ -944,12 +1115,210 @@
       });
     }
 
+    function drawMotionPlaceholder() {
+      const canvas = byId("motionCanvas");
+      if (!canvas) return;
+      const { ctx, w, h } = setupCanvas(canvas);
+      ctx.fillStyle = "#607080";
+      ctx.font = "15px Microsoft YaHei, Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("请先完成一次测试计算", w / 2, h / 2);
+      ctx.textAlign = "left";
+      byId("motionStatus").textContent = "等待测试结果";
+    }
+
+    function drawMotionFrame(result, progress) {
+      const canvas = byId("motionCanvas");
+      if (!canvas || !result) return;
+      const { ctx, w, h, pad } = setupCanvas(canvas);
+      const rawPoints = result.rawPoints;
+      const targetPoints = result.targetPoints;
+      const allPoints = rawPoints.concat(targetPoints);
+      const xs = allPoints.map(p => p.x);
+      const ys = allPoints.map(p => p.y);
+      const scale = scaler(Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys), w, h, pad + 10);
+
+      drawLaneBackground(ctx, w, h, scale);
+      drawPath(ctx, rawPoints, scale, "rgba(197, 130, 34, 0.78)", 2);
+      drawPath(ctx, targetPoints, scale, "rgba(31, 157, 103, 0.88)", 2);
+      drawPartialPath(ctx, rawPoints, scale, progress, "#c58222", 4);
+      drawPartialPath(ctx, targetPoints, scale, progress, "#1f9d67", 4);
+
+      const rawCar = pointAtProgress(rawPoints, progress);
+      const targetCar = pointAtProgress(targetPoints, progress);
+      drawCar(ctx, scale.x(rawCar.x), scale.y(rawCar.y), rawCar.heading, "#c58222", "控制前");
+      drawCar(ctx, scale.x(targetCar.x), scale.y(targetCar.y), targetCar.heading, "#1f9d67", "控制后");
+      legend(ctx, [["控制前 T_raw", "#c58222"], ["控制后 T_target", "#1f9d67"]], w, pad);
+      byId("metricMotionProgress").textContent = `${Math.round(progress * 100)}%`;
+    }
+
+    function drawLaneBackground(ctx, w, h, scale) {
+      ctx.fillStyle = "#f9fcff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "#d9e6ef";
+      ctx.lineWidth = 1;
+      for (let y = scale.y(scale.maxY); y <= scale.y(scale.minY); y += 38) {
+        ctx.beginPath();
+        ctx.moveTo(18, y);
+        ctx.lineTo(w - 18, y);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "rgba(44, 151, 211, .16)";
+      for (let x = scale.x(scale.minX); x <= scale.x(scale.maxX); x += 58) {
+        ctx.beginPath();
+        ctx.moveTo(x, 18);
+        ctx.lineTo(x, h - 18);
+        ctx.stroke();
+      }
+    }
+
+    function drawPartialPath(ctx, points, scale, progress, color, width) {
+      const targetDistance = pathLength(points) * progress;
+      let travelled = 0;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(scale.x(points[0].x), scale.y(points[0].y));
+      for (let i = 0; i < points.length - 1; i += 1) {
+        const segment = distance2d(points[i], points[i + 1]);
+        if (travelled + segment <= targetDistance) {
+          ctx.lineTo(scale.x(points[i + 1].x), scale.y(points[i + 1].y));
+          travelled += segment;
+        } else {
+          const alpha = segment > 0 ? (targetDistance - travelled) / segment : 0;
+          const x = points[i].x + (points[i + 1].x - points[i].x) * alpha;
+          const y = points[i].y + (points[i + 1].y - points[i].y) * alpha;
+          ctx.lineTo(scale.x(x), scale.y(y));
+          break;
+        }
+      }
+      ctx.stroke();
+    }
+
+    function drawCar(ctx, x, y, heading, color, label) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-heading);
+      ctx.fillStyle = color;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      roundedRect(ctx, -15, -8, 30, 16, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(4, -5, 8, 10);
+      ctx.restore();
+
+      ctx.fillStyle = color;
+      ctx.font = "12px Microsoft YaHei, Arial";
+      ctx.fillText(label, x + 12, y - 12);
+    }
+
+    function roundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function pointAtProgress(points, progress) {
+      const total = pathLength(points);
+      const target = total * Math.min(1, Math.max(0, progress));
+      let travelled = 0;
+      for (let i = 0; i < points.length - 1; i += 1) {
+        const a = points[i];
+        const b = points[i + 1];
+        const segment = distance2d(a, b);
+        if (travelled + segment >= target) {
+          const alpha = segment > 0 ? (target - travelled) / segment : 0;
+          return {
+            x: a.x + (b.x - a.x) * alpha,
+            y: a.y + (b.y - a.y) * alpha,
+            heading: Math.atan2(b.y - a.y, b.x - a.x)
+          };
+        }
+        travelled += segment;
+      }
+      const prev = points[points.length - 2];
+      const last = points[points.length - 1];
+      return { x: last.x, y: last.y, heading: Math.atan2(last.y - prev.y, last.x - prev.x) };
+    }
+
+    function pathLength(points) {
+      if (!points || points.length < 2) return 0;
+      let total = 0;
+      for (let i = 0; i < points.length - 1; i += 1) {
+        total += distance2d(points[i], points[i + 1]);
+      }
+      return total;
+    }
+
+    function distance2d(a, b) {
+      return Math.hypot(b.x - a.x, b.y - a.y);
+    }
+
+    function playMotion() {
+      if (!lastResult) {
+        drawMotionPlaceholder();
+        return;
+      }
+      if (motionState.running) return;
+      motionState.running = true;
+      motionState.lastTime = performance.now();
+      byId("motionStatus").textContent = "播放中";
+      motionState.rafId = requestAnimationFrame(stepMotion);
+    }
+
+    function pauseMotion() {
+      motionState.running = false;
+      cancelAnimationFrame(motionState.rafId);
+      byId("motionStatus").textContent = "已暂停";
+    }
+
+    function resetMotion() {
+      motionState.running = false;
+      cancelAnimationFrame(motionState.rafId);
+      motionState.progress = 0;
+      byId("motionStatus").textContent = "已复位";
+      if (lastResult) drawMotionFrame(lastResult, motionState.progress);
+      else drawMotionPlaceholder();
+    }
+
+    function stepMotion(now) {
+      if (!motionState.running) return;
+      const elapsed = now - motionState.lastTime;
+      motionState.lastTime = now;
+      motionState.progress += elapsed / 8500;
+      if (motionState.progress >= 1) {
+        motionState.progress = 1;
+        motionState.running = false;
+        byId("motionStatus").textContent = "播放完成";
+      }
+      drawMotionFrame(lastResult, motionState.progress);
+      if (motionState.running) {
+        motionState.rafId = requestAnimationFrame(stepMotion);
+      }
+    }
+
     document.querySelectorAll(".nav button").forEach(btn => {
       btn.addEventListener("click", () => switchPage(btn.dataset.page));
     });
-    byId("loginBtn").addEventListener("click", showApp);
+    byId("loginBtn").addEventListener("click", login);
+    byId("password").addEventListener("keydown", event => {
+      if (event.key === "Enter") login();
+    });
     byId("runBtn").addEventListener("click", runTest);
     byId("resetBtn").addEventListener("click", loadDefaults);
+    byId("motionPlayBtn").addEventListener("click", playMotion);
+    byId("motionPauseBtn").addEventListener("click", pauseMotion);
+    byId("motionResetBtn").addEventListener("click", resetMotion);
     byId("closeModal").addEventListener("click", hideModal);
     byId("modalReportBtn").addEventListener("click", () => { hideModal(); switchPage("report"); });
     byId("modalInputBtn").addEventListener("click", () => { hideModal(); switchPage("input"); });
@@ -959,4 +1328,3 @@
   </script>
 </body>
 </html>
-
