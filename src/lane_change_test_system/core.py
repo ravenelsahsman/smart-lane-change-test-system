@@ -140,7 +140,7 @@ DEFAULT_PAYLOAD = {
     "vehicleMass": 1420.0,
     "centerOfMassHeight": 0.52,
     "rearRollStiffnessDistribution": 0.55,
-    "loadTransferDamping": 2000.0,
+    "loadTransferDamping": 4000.0,
     "wheelbase": 2.72,
     "pwmGain": 0.9,
     "dutyCenter": 7.5,
@@ -425,7 +425,60 @@ def reconstruct_window(
         x += math.cos(theta) * ds
         y += math.sin(theta) * ds
         reconstructed[point_index] = (x, y)
+
+    apply_endpoint_continuity_correction(points, reconstructed, start_index, end_index, theta)
     return reconstructed
+
+
+def apply_endpoint_continuity_correction(
+    original_points: Sequence[Point],
+    reconstructed_points: list[Point],
+    start_index: int,
+    end_index: int,
+    reconstructed_end_heading: float,
+) -> None:
+    if end_index <= start_index:
+        return
+
+    local_arcs = [0.0]
+    for point_index in range(start_index, end_index):
+        local_arcs.append(
+            local_arcs[-1] + distance(original_points[point_index], original_points[point_index + 1])
+        )
+    total_arc = local_arcs[-1]
+    if total_arc <= EPSILON:
+        return
+
+    endpoint_residual_x = original_points[end_index][0] - reconstructed_points[end_index][0]
+    endpoint_residual_y = original_points[end_index][1] - reconstructed_points[end_index][1]
+    reconstructed_derivative = (
+        math.cos(reconstructed_end_heading),
+        math.sin(reconstructed_end_heading),
+    )
+    target_heading = boundary_exit_heading(original_points, end_index)
+    target_derivative = (math.cos(target_heading), math.sin(target_heading))
+    derivative_residual_x = target_derivative[0] - reconstructed_derivative[0]
+    derivative_residual_y = target_derivative[1] - reconstructed_derivative[1]
+
+    coefficient_ax = derivative_residual_x * total_arc - 2.0 * endpoint_residual_x
+    coefficient_bx = 3.0 * endpoint_residual_x - derivative_residual_x * total_arc
+    coefficient_ay = derivative_residual_y * total_arc - 2.0 * endpoint_residual_y
+    coefficient_by = 3.0 * endpoint_residual_y - derivative_residual_y * total_arc
+
+    for offset, point_index in enumerate(range(start_index, end_index + 1)):
+        normalized_arc = local_arcs[offset] / total_arc
+        correction_x = coefficient_ax * normalized_arc**3 + coefficient_bx * normalized_arc**2
+        correction_y = coefficient_ay * normalized_arc**3 + coefficient_by * normalized_arc**2
+        current_x, current_y = reconstructed_points[point_index]
+        reconstructed_points[point_index] = (current_x + correction_x, current_y + correction_y)
+
+
+def boundary_exit_heading(points: Sequence[Point], end_index: int) -> float:
+    if end_index < len(points) - 1:
+        point_a, point_b = points[end_index], points[end_index + 1]
+    else:
+        point_a, point_b = points[end_index - 1], points[end_index]
+    return math.atan2(point_b[1] - point_a[1], point_b[0] - point_a[0])
 
 
 def generate_control_command(

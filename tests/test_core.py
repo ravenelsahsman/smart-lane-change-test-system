@@ -62,7 +62,21 @@ class CoreFormulaTests(unittest.TestCase):
         self.assertIsNotNone(result.control_command)
         self.assertIsNotNone(result.feedback)
 
+    def test_reconstructed_windows_keep_endpoint_continuity(self) -> None:
+        payload = DEFAULT_PAYLOAD | {"pointsText": sample_points_text()}
+        result = run_lane_change_test(parse_payload(payload))
+        rebuilt_reports = [report for report in result.reversal_reports if report.reconstructed]
+        self.assertGreater(len(rebuilt_reports), 0)
+        for report in rebuilt_reports:
+            raw_end = result.raw_points[report.end_index]
+            target_end = result.target_points[report.end_index]
+            self.assertAlmostEqual(raw_end[0], target_end[0], places=9)
+            self.assertAlmostEqual(raw_end[1], target_end[1], places=9)
+
+        raw_rate_peak = max(abs(value) for value in result.raw_curvature_rate)
+        target_rate_peak = max(abs(value) for value in result.target_curvature_rate)
+        self.assertLess(target_rate_peak, raw_rate_peak * 5.0)
+
 
 if __name__ == "__main__":
     unittest.main()
-

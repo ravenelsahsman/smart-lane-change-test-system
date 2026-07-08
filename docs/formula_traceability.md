@@ -17,6 +17,7 @@
 | 安全曲率积分 | `κ_safe(s)=κ_safe(0)+∫_0^s κ_rate(l)dl` | `reconstruct_window` |
 | 航向角积分 | `θ(s)=θ_0+∫_0^s κ_safe(l)dl` | `reconstruct_window` |
 | 空间坐标累加 | `x(s)=x_0+∫_0^s cos(θ(l))dl`, `y(s)=y_0+∫_0^s sin(θ(l))dl` | `reconstruct_window` |
+| 局部点集替换与边界连续 | 将重构后的局部平面点集替换预设空间范围内原始点，并消除替换边界的数据断层 | `reconstruct_window`, `apply_endpoint_continuity_correction` |
 | 目标前轮转向角 | `δ=arctan(L*κ)` | `generate_control_command` |
 | PWM 占空比 | `Duty=K_pwm*δ+Duty_center` | `generate_control_command` |
 | 反馈优化参数 | `F_opt=exp(-λ1*e_y^2-λ2*e_ω^2)` | `evaluate_feedback` |
@@ -27,4 +28,3 @@
 - 计划书未给出深度学习网络结构和权重，因此测试系统只验证其输出点集之后的轨迹提取、阈值、重构、控制与反馈链路。
 - 计划书未给出“根据当前纵向行驶速度动态计算前瞻距离”的解析公式，因此测试系统将当前控制周期前瞻距离作为输入参数，用于执行计划书中明确给出的曲率插值、转向映射与 PWM 公式。
 - 曲率序列端点没有三点邻域。为保持 `K_raw={κ_1,...,κ_N}` 的序列长度，端点复制最近的可三点差分内点曲率，不引入新的曲率公式。
-

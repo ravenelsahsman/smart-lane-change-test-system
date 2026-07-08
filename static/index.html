@@ -611,7 +611,7 @@
           <div class="intro-grid">
             <div class="intro-block">
               <h3>项目来源</h3>
-              <p>本测试系统严格围绕项目书“基于深度学习的智能车辆变道轨迹自动生成方法及系统”构建，用于验证深度学习轨迹输出之后的曲率提取、曲率极性反转点识别、底盘物理阈值计算、局部曲率重构、控制指令生成和反馈优化闭环。</p>
+              <p>本测试系统用于验证深度学习轨迹输出之后的曲率提取、曲率极性反转点识别、底盘物理阈值计算、局部曲率重构、控制指令生成和反馈优化闭环。</p>
             </div>
             <div class="intro-block">
               <h3>核心问题</h3>
@@ -619,7 +619,7 @@
             </div>
             <div class="intro-block">
               <h3>测试对象</h3>
-              <p>系统不擅自构造计划书未给出的神经网络结构，而是接收“预设轨迹生成网络输出”的预选变道轨迹点集 T_raw，并对该点集执行计划书中明确给出的三点差分、离散微分、阈值限幅、积分重构和控制映射。</p>
+              <p>系统接收“预设轨迹生成网络输出”的预选变道轨迹点集 T_raw，并对该点集执行计划书中明确给出的三点差分、离散微分、阈值限幅、积分重构和控制映射。</p>
             </div>
             <div class="intro-block">
               <h3>验证目标</h3>
@@ -746,7 +746,7 @@
           <h2 class="page-title">控制前后小车运动演示</h2>
           <div class="motion-layout">
             <div class="chart-box">
-              <h3>控制前轨迹 T_raw 与控制后目标轨迹 T_target</h3>
+              <h3>控制前（未重构 T_raw）与控制后（重构后 T_target）</h3>
               <canvas class="motion-canvas" id="motionCanvas"></canvas>
               <div class="actions">
                 <button class="primary-btn" id="motionPlayBtn">播放</button>
@@ -756,8 +756,8 @@
               </div>
             </div>
             <div class="motion-side">
-              <div class="metric"><label>控制前轨迹长度</label><strong id="metricRawLength">-</strong></div>
-              <div class="metric"><label>控制后轨迹长度</label><strong id="metricTargetLength">-</strong></div>
+              <div class="metric"><label>控制前未重构轨迹长度</label><strong id="metricRawLength">-</strong></div>
+              <div class="metric"><label>控制后重构轨迹长度</label><strong id="metricTargetLength">-</strong></div>
               <div class="metric"><label>动画进度</label><strong id="metricMotionProgress">-</strong></div>
               <div class="metric"><label>重构窗口数量</label><strong id="metricMotionRebuilt">-</strong></div>
             </div>
@@ -1146,9 +1146,9 @@
 
       const rawCar = pointAtProgress(rawPoints, progress);
       const targetCar = pointAtProgress(targetPoints, progress);
-      drawCar(ctx, scale.x(rawCar.x), scale.y(rawCar.y), rawCar.heading, "#c58222", "控制前");
-      drawCar(ctx, scale.x(targetCar.x), scale.y(targetCar.y), targetCar.heading, "#1f9d67", "控制后");
-      legend(ctx, [["控制前 T_raw", "#c58222"], ["控制后 T_target", "#1f9d67"]], w, pad);
+      drawCar(ctx, scale.x(rawCar.x), scale.y(rawCar.y), rawCar.heading, "#c58222", "控制前 T_raw");
+      drawCar(ctx, scale.x(targetCar.x), scale.y(targetCar.y), targetCar.heading, "#1f9d67", "控制后 T_target");
+      legend(ctx, [["控制前: 未重构 T_raw", "#c58222"], ["控制后: 重构后 T_target", "#1f9d67"]], w, pad);
       byId("metricMotionProgress").textContent = `${Math.round(progress * 100)}%`;
     }
 
