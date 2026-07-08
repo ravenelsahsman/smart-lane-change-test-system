@@ -158,9 +158,12 @@ DEFAULT_PAYLOAD = {
 def sample_points() -> list[Point]:
     """Only a UI bootstrap input; the algorithm itself consumes T_raw points."""
     points: list[Point] = []
-    for i in range(51):
-        x = i * 1.2
-        y = 3.5 * math.sin(2.0 * math.pi * (x + 0.6) / 40.0)
+    for i in range(61):
+        x = float(i)
+        lane_change = 1.75 * (1.0 - math.cos(math.pi * x / 60.0))
+        sway_envelope = math.exp(-((x - 30.0) / 8.0) ** 2)
+        sway = 0.45 * sway_envelope * math.sin(2.0 * math.pi * (x - 24.0) / 4.0)
+        y = lane_change + sway
         points.append((x, y))
     return points
 

@@ -7,12 +7,16 @@ from src.lane_change_test_system.core import (
     DEFAULT_PAYLOAD,
     ChassisLoadParams,
     ControlParams,
+    curvature_rate_sequence,
+    curvature_rate_threshold,
+    curvature_sequence,
+    detect_reversal_reports,
     evaluate_feedback,
     generate_control_command,
     parse_payload,
+    reconstruct_window,
     run_lane_change_test,
     sample_points_text,
-    curvature_rate_threshold,
 )
 
 
@@ -64,18 +68,32 @@ class CoreFormulaTests(unittest.TestCase):
 
     def test_reconstructed_windows_keep_endpoint_continuity(self) -> None:
         payload = DEFAULT_PAYLOAD | {"pointsText": sample_points_text()}
-        result = run_lane_change_test(parse_payload(payload))
-        rebuilt_reports = [report for report in result.reversal_reports if report.reconstructed]
-        self.assertGreater(len(rebuilt_reports), 0)
-        for report in rebuilt_reports:
-            raw_end = result.raw_points[report.end_index]
-            target_end = result.target_points[report.end_index]
-            self.assertAlmostEqual(raw_end[0], target_end[0], places=9)
-            self.assertAlmostEqual(raw_end[1], target_end[1], places=9)
+        test_input = parse_payload(payload)
+        curvatures = curvature_sequence(test_input.points, test_input.delta_t)
+        rates = curvature_rate_sequence(test_input.points, curvatures)
+        gamma_max = curvature_rate_threshold(test_input.speed, test_input.chassis)
+        reports = detect_reversal_reports(
+            test_input.points, curvatures, rates, test_input.spatial_range, gamma_max
+        )
+        report = reports[0]
+        target_points = reconstruct_window(
+            test_input.points, curvatures, rates, report.start_index, report.end_index, gamma_max
+        )
+        for index in (report.start_index, report.end_index):
+            raw_point = test_input.points[index]
+            target_point = target_points[index]
+            self.assertAlmostEqual(raw_point[0], target_point[0], places=9)
+            self.assertAlmostEqual(raw_point[1], target_point[1], places=9)
 
+    def test_default_sample_shows_sway_suppression(self) -> None:
+        payload = DEFAULT_PAYLOAD | {"pointsText": sample_points_text()}
+        result = run_lane_change_test(parse_payload(payload))
         raw_rate_peak = max(abs(value) for value in result.raw_curvature_rate)
         target_rate_peak = max(abs(value) for value in result.target_curvature_rate)
-        self.assertLess(target_rate_peak, raw_rate_peak * 5.0)
+        rebuilt_count = sum(report.reconstructed for report in result.reversal_reports)
+        self.assertGreaterEqual(rebuilt_count, 4)
+        self.assertGreater(raw_rate_peak, result.gamma_max)
+        self.assertLess(target_rate_peak, raw_rate_peak * 0.35)
 
 
 if __name__ == "__main__":
