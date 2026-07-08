@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>智能车辆变道轨迹自动生成测试系统</title>
+  <style>
+    :root {
+      --sidebar: #263747;
+      --sidebar-dark: #1d2a37;
+      --accent: #2c97d3;
+      --accent-dark: #167db8;
+      --page: #f3f5f8;
+      --panel: #ffffff;
+      --line: #dde5ee;
+      --text: #23313f;
+      --muted: #6e7d8c;
+      --danger: #d65b5b;
+      --ok: #1f9d67;
+      --warn: #c58222;
+      font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--page);
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(120deg, rgba(39, 72, 98, 0.92), rgba(42, 143, 196, 0.82)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'%3E%3Cg fill='none' stroke='rgba(255,255,255,.16)' stroke-width='2'%3E%3Cpath d='M-40 520 C 240 360, 420 650, 720 470 S 1040 370, 1250 530'/%3E%3Cpath d='M-50 410 C 210 300, 450 480, 710 330 S 1000 260, 1260 390'/%3E%3Cpath d='M-30 620 C 260 520, 470 760, 760 590 S 1040 520, 1250 650'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: cover;
+      padding: 24px;
+    }
+
+    .login-panel {
+      width: min(360px, 92vw);
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 18px 45px rgba(18, 38, 56, 0.26);
+      padding: 26px 28px 24px;
+    }
+
+    .login-title {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+
+    .login-title h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .login-title div {
+      font-size: 13px;
+      opacity: .9;
+    }
+
+    .login-panel h2 {
+      margin: 0 0 18px;
+      text-align: center;
+      font-size: 19px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin: 0 0 7px;
+      font-size: 14px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      padding: 10px 11px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: border .15s, box-shadow .15s;
+    }
+
+    textarea {
+      min-height: 190px;
+      resize: vertical;
+      font-family: Consolas, "Microsoft YaHei", monospace;
+      line-height: 1.45;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(44, 151, 211, .13);
+    }
+
+    .field {
+      margin-bottom: 15px;
+    }
+
+    .primary-btn,
+    .ghost-btn {
+      border: 0;
+      border-radius: 3px;
+      cursor: pointer;
+      height: 38px;
+      padding: 0 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .primary-btn {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .primary-btn:hover {
+      background: var(--accent-dark);
+    }
+
+    .ghost-btn {
+      background: #eaf2f8;
+      color: #286d9b;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: none;
+      grid-template-columns: 236px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: var(--sidebar);
+      color: #dbe6ef;
+      min-height: 100vh;
+      position: sticky;
+      top: 0;
+      align-self: start;
+    }
+
+    .brand {
+      padding: 24px 22px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      background: var(--sidebar-dark);
+    }
+
+    .brand h1 {
+      margin: 0 0 8px;
+      font-size: 19px;
+      line-height: 1.35;
+      color: #fff;
+    }
+
+    .brand span {
+      color: #a9bac9;
+      font-size: 12px;
+    }
+
+    .nav {
+      padding: 16px 0;
+    }
+
+    .nav button {
+      width: 100%;
+      height: 48px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      padding: 0 22px;
+      cursor: pointer;
+      border-left: 4px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      background: rgba(255, 255, 255, .07);
+      border-left-color: var(--accent);
+      color: #fff;
+    }
+
+    .nav .mark {
+      width: 18px;
+      color: #fff;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    main {
+      padding: 28px 32px 42px;
+      overflow: hidden;
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid #e6edf4;
+      box-shadow: 0 10px 24px rgba(28, 49, 68, .06);
+      border-radius: 5px;
+      padding: 24px 26px 28px;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      margin: 0 0 22px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #83bfdf;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 24px 0 14px;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .step-title:first-of-type {
+      margin-top: 0;
+    }
+
+    .badge {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      flex: none;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      background: #f6f9fc;
+      border: 1px solid #e3ecf4;
+      border-radius: 5px;
+      padding: 14px 15px;
+    }
+
+    .metric label {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 0 0 8px;
+      font-weight: 600;
+    }
+
+    .metric strong {
+      font-size: 20px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .chart-box {
+      border: 1px solid #e1eaf2;
+      border-radius: 5px;
+      padding: 14px;
+      background: #fff;
+      min-height: 320px;
+    }
+
+    .chart-box h3 {
+      font-size: 15px;
+      margin: 0 0 10px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 260px;
+      display: block;
+      border: 1px solid #edf2f6;
+      background: linear-gradient(#ffffff, #f8fbfd);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #e7eef5;
+      padding: 11px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #536575;
+      background: #f5f8fb;
+      font-weight: 800;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag.ok {
+      color: var(--ok);
+      background: rgba(31, 157, 103, .1);
+    }
+
+    .tag.warn {
+      color: var(--warn);
+      background: rgba(197, 130, 34, .12);
+    }
+
+    .tag.danger {
+      color: var(--danger);
+      background: rgba(214, 91, 91, .12);
+    }
+
+    .formula-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .formula {
+      background: #f7fafc;
+      border-left: 4px solid #83bfdf;
+      padding: 12px 14px;
+      font-family: Consolas, "Microsoft YaHei", monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(15, 28, 39, .62);
+      padding: 24px;
+      z-index: 20;
+    }
+
+    .modal {
+      width: min(720px, 96vw);
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, .28);
+      padding: 22px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .close-btn {
+      border: 0;
+      background: transparent;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      color: #667686;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        min-height: auto;
+      }
+
+      .nav {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .grid,
+      .grid.two,
+      .metric-row,
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 18px 14px 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="login-screen" id="loginScreen">
+    <div>
+      <div class="login-title">
+        <h1>智能车辆变道轨迹自动生成测试系统</h1>
+        <div>基于深度学习轨迹输出的曲率反转安全重构</div>
+      </div>
+      <div class="login-panel">
+        <h2>用户登录</h2>
+        <div class="field">
+          <label for="username">用户名</label>
+          <input id="username" value="admin" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="password">密码</label>
+          <input id="password" type="password" value="123456" autocomplete="current-password" />
+        </div>
+        <button class="primary-btn" style="width:100%" id="loginBtn">进入系统</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="app-shell" id="appShell">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>智能车辆变道轨迹自动生成测试系统</h1>
+        <span>曲率反转点局部刚性限幅与反馈优化</span>
+      </div>
+      <nav class="nav">
+        <button data-page="intro" class="active"><span class="mark">i</span>系统介绍</button>
+        <button data-page="input"><span class="mark">1</span>数据输入</button>
+        <button data-page="process"><span class="mark">2</span>数据处理</button>
+        <button data-page="reconstruct"><span class="mark">3</span>阈值重构</button>
+        <button data-page="control"><span class="mark">4</span>控制指令</button>
+        <button data-page="feedback"><span class="mark">5</span>反馈优化</button>
+        <button data-page="report"><span class="mark">R</span>测试报告</button>
+      </nav>
+    </aside>
+
+    <main>
+      <section class="page active" id="page-intro">
+        <div class="panel">
+          <h2 class="page-title">系统介绍</h2>
+          <div class="formula-list">
+            <div class="formula">T_raw={(x_1,y_1),(x_2,y_2),...,(x_N,y_N)}</div>
+            <div class="formula">γ_max=(K_damp*t_w)/(m*h_g*D_r*v^3)</div>
+            <div class="formula">δ=arctan(L*κ)，Duty=K_pwm*δ+Duty_center</div>
+            <div class="formula">F_opt=exp(-λ1*e_y^2-λ2*e_ω^2)，L_new=min(L_max,L_old+ρ*(F_th-F_opt))</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-input">
+        <div class="panel">
+          <h2 class="page-title">数据输入</h2>
+          <div class="step-title"><span class="badge">1</span>输入预设轨迹生成网络输出</div>
+          <div class="field">
+            <label for="pointsText">预选变道轨迹点集 T_raw，格式为每行 x,y</label>
+            <textarea id="pointsText"></textarea>
+          </div>
+
+          <div class="step-title"><span class="badge">2</span>输入轨迹处理参数</div>
+          <div class="grid">
+            <div class="field"><label for="speed">纵向行驶速度 v (m/s)</label><input id="speed" type="number" step="0.01" /></div>
+            <div class="field"><label for="spatialRange">预设空间范围 L_old (m)</label><input id="spatialRange" type="number" step="0.01" /></div>
+            <div class="field"><label for="deltaT">三点差分 Δt</label><input id="deltaT" type="number" step="0.01" /></div>
+          </div>
+
+          <div class="step-title"><span class="badge">3</span>输入底盘载荷刚性分配参数</div>
+          <div class="grid">
+            <div class="field"><label for="rearTrackWidth">后轴轮距 t_w (m)</label><input id="rearTrackWidth" type="number" step="0.01" /></div>
+            <div class="field"><label for="vehicleMass">整车质量 m (kg)</label><input id="vehicleMass" type="number" step="1" /></div>
+            <div class="field"><label for="centerOfMassHeight">质心高度 h_g (m)</label><input id="centerOfMassHeight" type="number" step="0.01" /></div>
+            <div class="field"><label for="rearRollStiffnessDistribution">后轴侧倾刚度分配系数 D_r</label><input id="rearRollStiffnessDistribution" type="number" step="0.01" /></div>
+            <div class="field"><label for="loadTransferDamping">载荷转移临界阻尼 K_damp</label><input id="loadTransferDamping" type="number" step="1" /></div>
+          </div>
+
+          <div class="step-title"><span class="badge">4</span>输入控制与反馈参数</div>
+          <div class="grid">
+            <div class="field"><label for="wheelbase">车辆轴距 L (m)</label><input id="wheelbase" type="number" step="0.01" /></div>
+            <div class="field"><label for="lookaheadDistance">当前控制周期前瞻距离 (m)</label><input id="lookaheadDistance" type="number" step="0.01" /></div>
+            <div class="field"><label for="pwmGain">舵机比例系数 K_pwm</label><input id="pwmGain" type="number" step="0.01" /></div>
+            <div class="field"><label for="dutyCenter">基准占空比 Duty_center (%)</label><input id="dutyCenter" type="number" step="0.01" /></div>
+            <div class="field"><label for="lateralError">横向位移偏差 e_y (m)</label><input id="lateralError" type="number" step="0.01" /></div>
+            <div class="field"><label for="yawRateError">偏航角速度偏差 e_ω (rad/s)</label><input id="yawRateError" type="number" step="0.01" /></div>
+            <div class="field"><label for="lambdaLateral">位移惩罚权重 λ1</label><input id="lambdaLateral" type="number" step="0.01" /></div>
+            <div class="field"><label for="lambdaYawRate">偏航角惩罚权重 λ2</label><input id="lambdaYawRate" type="number" step="0.01" /></div>
+            <div class="field"><label for="confidenceThreshold">置信度阈值 F_th</label><input id="confidenceThreshold" type="number" step="0.01" /></div>
+            <div class="field"><label for="expansionCoefficient">空间膨胀系数 ρ</label><input id="expansionCoefficient" type="number" step="0.01" /></div>
+            <div class="field"><label for="maxSpatialRange">最大预设空间范围 L_max (m)</label><input id="maxSpatialRange" type="number" step="0.01" /></div>
+          </div>
+          <div class="actions">
+            <button class="primary-btn" id="runBtn">开始测试</button>
+            <button class="ghost-btn" id="resetBtn">恢复默认输入</button>
+            <span class="status" id="runStatus"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-process">
+        <div class="panel">
+          <h2 class="page-title">数据处理</h2>
+          <div class="metric-row">
+            <div class="metric"><label>轨迹点数量</label><strong id="metricPointCount">-</strong></div>
+            <div class="metric"><label>曲率序列长度</label><strong id="metricCurvCount">-</strong></div>
+            <div class="metric"><label>变化率序列长度</label><strong id="metricRateCount">-</strong></div>
+            <div class="metric"><label>曲率反转点数量</label><strong id="metricRevCount">-</strong></div>
+          </div>
+          <div class="chart-grid">
+            <div class="chart-box"><h3>预选轨迹与目标轨迹</h3><canvas id="trajectoryChart"></canvas></div>
+            <div class="chart-box"><h3>轨迹曲率序列 K_raw</h3><canvas id="curvatureChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-reconstruct">
+        <div class="panel">
+          <h2 class="page-title">阈值重构</h2>
+          <div class="metric-row">
+            <div class="metric"><label>γ_max</label><strong id="metricGammaMax">-</strong></div>
+            <div class="metric"><label>最大 γ_raw</label><strong id="metricGammaRaw">-</strong></div>
+            <div class="metric"><label>触发重构窗口</label><strong id="metricRebuilt">-</strong></div>
+            <div class="metric"><label>查找表点数</label><strong id="metricLookup">-</strong></div>
+          </div>
+          <div class="chart-grid">
+            <div class="chart-box"><h3>曲率空间变化率 ΔK</h3><canvas id="rateChart"></canvas></div>
+            <div class="chart-box"><h3>车速-阈值查找表</h3><canvas id="lookupChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-control">
+        <div class="panel">
+          <h2 class="page-title">控制指令</h2>
+          <div class="metric-row">
+            <div class="metric"><label>目标控制曲率 κ</label><strong id="metricControlCurv">-</strong></div>
+            <div class="metric"><label>前轮转向角 δ(rad)</label><strong id="metricDeltaRad">-</strong></div>
+            <div class="metric"><label>前轮转向角 δ(deg)</label><strong id="metricDeltaDeg">-</strong></div>
+            <div class="metric"><label>PWM 占空比</label><strong id="metricDuty">-</strong></div>
+          </div>
+          <table>
+            <thead><tr><th>项目</th><th>计算式</th><th>结果</th></tr></thead>
+            <tbody id="controlTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-feedback">
+        <div class="panel">
+          <h2 class="page-title">反馈优化</h2>
+          <div class="metric-row">
+            <div class="metric"><label>反馈优化参数 F_opt</label><strong id="metricFopt">-</strong></div>
+            <div class="metric"><label>原预设空间范围 L_old</label><strong id="metricLold">-</strong></div>
+            <div class="metric"><label>更新后空间范围 L_new</label><strong id="metricLnew">-</strong></div>
+            <div class="metric"><label>是否更新</label><strong id="metricUpdated">-</strong></div>
+          </div>
+          <table>
+            <thead><tr><th>项目</th><th>计算式</th><th>结果</th></tr></thead>
+            <tbody id="feedbackTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-report">
+        <div class="panel">
+          <h2 class="page-title">测试报告</h2>
+          <table>
+            <thead><tr><th>反转点索引</th><th>空间范围索引</th><th>γ_raw</th><th>γ_max</th><th>处理结果</th></tr></thead>
+            <tbody id="reportTable"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <div class="modal-backdrop" id="resultModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>测试结果概览</h2>
+        <button class="close-btn" id="closeModal">×</button>
+      </div>
+      <div class="metric-row">
+        <div class="metric"><label>γ_max</label><strong id="modalGammaMax">-</strong></div>
+        <div class="metric"><label>重构窗口</label><strong id="modalRebuilt">-</strong></div>
+        <div class="metric"><label>PWM</label><strong id="modalDuty">-</strong></div>
+        <div class="metric"><label>F_opt</label><strong id="modalFopt">-</strong></div>
+      </div>
+      <div class="actions">
+        <button class="primary-btn" id="modalReportBtn">查看完整报告</button>
+        <button class="ghost-btn" id="modalInputBtn">返回数据输入</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const numericIds = [
+      "speed", "spatialRange", "deltaT", "rearTrackWidth", "vehicleMass",
+      "centerOfMassHeight", "rearRollStiffnessDistribution", "loadTransferDamping",
+      "wheelbase", "pwmGain", "dutyCenter", "lookaheadDistance", "lambdaLateral",
+      "lambdaYawRate", "confidenceThreshold", "expansionCoefficient",
+      "maxSpatialRange", "lateralError", "yawRateError"
+    ];
+    let lastResult = null;
+
+    const byId = (id) => document.getElementById(id);
+    const fmt = (value, digits = 6) => Number.isFinite(value) ? Number(value).toFixed(digits) : "-";
+
+    function showApp() {
+      byId("loginScreen").style.display = "none";
+      byId("appShell").style.display = "grid";
+      switchPage("input");
+    }
+
+    function switchPage(page) {
+      document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav button").forEach(el => el.classList.remove("active"));
+      byId(`page-${page}`).classList.add("active");
+      document.querySelector(`.nav button[data-page="${page}"]`).classList.add("active");
+      if (lastResult) {
+        window.setTimeout(() => drawAllCharts(lastResult), 30);
+      }
+    }
+
+    async function loadDefaults() {
+      const response = await fetch("/api/default");
+      const data = await response.json();
+      byId("pointsText").value = data.pointsText;
+      for (const [key, value] of Object.entries(data.payload)) {
+        if (byId(key)) byId(key).value = value;
+      }
+    }
+
+    function collectPayload() {
+      const payload = { pointsText: byId("pointsText").value };
+      numericIds.forEach(id => payload[id] = Number(byId(id).value));
+      return payload;
+    }
+
+    async function runTest() {
+      byId("runStatus").textContent = "正在计算...";
+      const response = await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(collectPayload())
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        byId("runStatus").textContent = data.error || "计算失败";
+        return;
+      }
+      lastResult = data;
+      byId("runStatus").textContent = "计算完成";
+      renderResult(data);
+      switchPage("process");
+      showModal(data);
+    }
+
+    function renderResult(result) {
+      const reports = result.reversalReports || [];
+      const maxGammaRaw = reports.length ? Math.max(...reports.map(r => Math.abs(r.gammaRaw))) : 0;
+      const rebuilt = reports.filter(r => r.reconstructed).length;
+
+      byId("metricPointCount").textContent = result.rawPoints.length;
+      byId("metricCurvCount").textContent = result.rawCurvature.length;
+      byId("metricRateCount").textContent = result.rawCurvatureRate.length;
+      byId("metricRevCount").textContent = reports.length;
+      byId("metricGammaMax").textContent = fmt(result.gammaMax);
+      byId("metricGammaRaw").textContent = fmt(maxGammaRaw);
+      byId("metricRebuilt").textContent = rebuilt;
+      byId("metricLookup").textContent = result.thresholdLookup.length;
+
+      const cmd = result.controlCommand;
+      byId("metricControlCurv").textContent = fmt(cmd.targetCurvature);
+      byId("metricDeltaRad").textContent = fmt(cmd.steeringAngleRad);
+      byId("metricDeltaDeg").textContent = fmt(cmd.steeringAngleDeg);
+      byId("metricDuty").textContent = fmt(cmd.pwmDuty, 4);
+
+      const feedback = result.feedback;
+      byId("metricFopt").textContent = fmt(feedback.fOpt, 6);
+      byId("metricLold").textContent = fmt(feedback.oldSpatialRange, 3);
+      byId("metricLnew").textContent = fmt(feedback.newSpatialRange, 3);
+      byId("metricUpdated").textContent = feedback.updated ? "更新" : "保持";
+
+      byId("controlTable").innerHTML = [
+        ["目标前轮转向角", "δ=arctan(L*κ)", `${fmt(cmd.steeringAngleRad)} rad`],
+        ["PWM 占空比", "Duty=K_pwm*δ+Duty_center", fmt(cmd.pwmDuty, 4)]
+      ].map(rowHtml).join("");
+
+      byId("feedbackTable").innerHTML = [
+        ["反馈优化参数", "F_opt=exp(-λ1*e_y^2-λ2*e_ω^2)", fmt(feedback.fOpt, 6)],
+        ["预设空间范围更新", "L_new=min(L_max,L_old+ρ*(F_th-F_opt))", `${fmt(feedback.oldSpatialRange, 3)} → ${fmt(feedback.newSpatialRange, 3)}`]
+      ].map(rowHtml).join("");
+
+      byId("reportTable").innerHTML = reports.length ? reports.map(report => {
+        const tag = report.reconstructed
+          ? '<span class="tag danger">已重构</span>'
+          : '<span class="tag ok">未超限</span>';
+        return `<tr>
+          <td>${report.index}</td>
+          <td>${report.startIndex} - ${report.endIndex}</td>
+          <td>${fmt(report.gammaRaw)} / |γ|=${fmt(report.gammaRawAbs)}</td>
+          <td>${fmt(report.gammaMax)}</td>
+          <td>${tag}</td>
+        </tr>`;
+      }).join("") : '<tr><td colspan="5"><span class="tag warn">未检测到曲率极性反转点</span></td></tr>';
+
+      drawAllCharts(result);
+    }
+
+    function rowHtml(cols) {
+      return `<tr>${cols.map(col => `<td>${col}</td>`).join("")}</tr>`;
+    }
+
+    function showModal(result) {
+      const rebuilt = result.reversalReports.filter(r => r.reconstructed).length;
+      byId("modalGammaMax").textContent = fmt(result.gammaMax);
+      byId("modalRebuilt").textContent = rebuilt;
+      byId("modalDuty").textContent = fmt(result.controlCommand.pwmDuty, 4);
+      byId("modalFopt").textContent = fmt(result.feedback.fOpt, 6);
+      byId("resultModal").style.display = "grid";
+    }
+
+    function hideModal() {
+      byId("resultModal").style.display = "none";
+    }
+
+    function drawAllCharts(result) {
+      drawTrajectoryChart(byId("trajectoryChart"), result.rawPoints, result.targetPoints);
+      drawSeriesChart(byId("curvatureChart"), [
+        { name: "K_raw", values: result.rawCurvature, color: "#2c97d3" },
+        { name: "K_target", values: result.targetCurvature, color: "#1f9d67" }
+      ]);
+      drawSeriesChart(byId("rateChart"), [
+        { name: "Delta K raw", values: result.rawCurvatureRate, color: "#c58222" },
+        { name: "Delta K target", values: result.targetCurvatureRate, color: "#1f9d67" }
+      ], { positive: result.gammaMax, negative: -result.gammaMax });
+      drawXYChart(byId("lookupChart"), result.thresholdLookup.map(p => ({ x: p.speed, y: p.gammaMax })), "#2c97d3");
+    }
+
+    function setupCanvas(canvas) {
+      const ratio = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(320, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(220, Math.floor(rect.height * ratio));
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      return { ctx, w: rect.width, h: rect.height, pad: 34 };
+    }
+
+    function drawAxes(ctx, w, h, pad, minX, maxX, minY, maxY) {
+      ctx.strokeStyle = "#dbe5ee";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, pad);
+      ctx.lineTo(pad, h - pad);
+      ctx.lineTo(w - pad, h - pad);
+      ctx.stroke();
+
+      ctx.fillStyle = "#7b8b9a";
+      ctx.font = "12px Arial";
+      ctx.fillText(fmt(maxY, 3), 6, pad + 4);
+      ctx.fillText(fmt(minY, 3), 6, h - pad);
+      ctx.fillText(fmt(minX, 2), pad, h - 8);
+      ctx.fillText(fmt(maxX, 2), w - pad - 46, h - 8);
+    }
+
+    function drawTrajectoryChart(canvas, rawPoints, targetPoints) {
+      const { ctx, w, h, pad } = setupCanvas(canvas);
+      const xs = rawPoints.concat(targetPoints).map(p => p.x);
+      const ys = rawPoints.concat(targetPoints).map(p => p.y);
+      const scale = scaler(Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys), w, h, pad);
+      drawAxes(ctx, w, h, pad, scale.minX, scale.maxX, scale.minY, scale.maxY);
+      drawPath(ctx, rawPoints, scale, "#c58222", 2);
+      drawPath(ctx, targetPoints, scale, "#1f9d67", 2);
+      legend(ctx, [["T_raw", "#c58222"], ["T_target", "#1f9d67"]], w, pad);
+    }
+
+    function drawSeriesChart(canvas, series, thresholds = null) {
+      const { ctx, w, h, pad } = setupCanvas(canvas);
+      const values = series.flatMap(s => s.values);
+      if (thresholds) values.push(thresholds.positive, thresholds.negative);
+      const minY = Math.min(...values, 0);
+      const maxY = Math.max(...values, 0);
+      const maxLen = Math.max(...series.map(s => s.values.length), 1);
+      const scale = scaler(0, maxLen - 1, minY, maxY, w, h, pad);
+      drawAxes(ctx, w, h, pad, scale.minX, scale.maxX, scale.minY, scale.maxY);
+      if (thresholds) {
+        drawHorizontal(ctx, thresholds.positive, scale, "#d65b5b");
+        drawHorizontal(ctx, thresholds.negative, scale, "#d65b5b");
+      }
+      series.forEach(s => drawPath(ctx, s.values.map((y, x) => ({ x, y })), scale, s.color, 2));
+      legend(ctx, series.map(s => [s.name, s.color]), w, pad);
+    }
+
+    function drawXYChart(canvas, points, color) {
+      const { ctx, w, h, pad } = setupCanvas(canvas);
+      if (!points.length) return;
+      const xs = points.map(p => p.x);
+      const ys = points.map(p => p.y);
+      const scale = scaler(Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys), w, h, pad);
+      drawAxes(ctx, w, h, pad, scale.minX, scale.maxX, scale.minY, scale.maxY);
+      drawPath(ctx, points, scale, color, 2);
+      legend(ctx, [["gamma_max lookup", color]], w, pad);
+    }
+
+    function scaler(minX, maxX, minY, maxY, w, h, pad) {
+      if (Math.abs(maxX - minX) < 1e-9) maxX = minX + 1;
+      if (Math.abs(maxY - minY) < 1e-9) {
+        maxY = minY + 1;
+        minY = minY - 1;
+      }
+      const xSpan = maxX - minX;
+      const ySpan = maxY - minY;
+      return {
+        minX, maxX, minY, maxY,
+        x: (value) => pad + (value - minX) / xSpan * (w - 2 * pad),
+        y: (value) => h - pad - (value - minY) / ySpan * (h - 2 * pad)
+      };
+    }
+
+    function drawPath(ctx, points, scale, color, width) {
+      if (!points.length) return;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = scale.x(p.x);
+        const y = scale.y(p.y);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.fillStyle = color;
+      points.forEach((p, i) => {
+        if (i % Math.ceil(points.length / 18) === 0) {
+          ctx.beginPath();
+          ctx.arc(scale.x(p.x), scale.y(p.y), 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
+
+    function drawHorizontal(ctx, value, scale, color) {
+      ctx.strokeStyle = color;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(scale.x(scale.minX), scale.y(value));
+      ctx.lineTo(scale.x(scale.maxX), scale.y(value));
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function legend(ctx, items, w, pad) {
+      ctx.font = "12px Arial";
+      let x = pad + 8;
+      const y = pad - 12;
+      items.forEach(([name, color]) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y - 9, 16, 3);
+        ctx.fillStyle = "#607080";
+        ctx.fillText(name, x + 22, y - 5);
+        x += Math.min(190, 46 + name.length * 8);
+      });
+    }
+
+    document.querySelectorAll(".nav button").forEach(btn => {
+      btn.addEventListener("click", () => switchPage(btn.dataset.page));
+    });
+    byId("loginBtn").addEventListener("click", showApp);
+    byId("runBtn").addEventListener("click", runTest);
+    byId("resetBtn").addEventListener("click", loadDefaults);
+    byId("closeModal").addEventListener("click", hideModal);
+    byId("modalReportBtn").addEventListener("click", () => { hideModal(); switchPage("report"); });
+    byId("modalInputBtn").addEventListener("click", () => { hideModal(); switchPage("input"); });
+    window.addEventListener("resize", () => { if (lastResult) drawAllCharts(lastResult); });
+
+    loadDefaults();
+  </script>
+</body>
+</html>
+
